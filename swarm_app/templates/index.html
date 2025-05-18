@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Links</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><defs><radialGradient id="grad" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="white"/><stop offset="100%" stop-color="%23c3cfe2"/></radialGradient></defs><rect width="100%" height="100%" fill="url(%23grad)"/></svg>');
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            color: #202124;
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 10px;
+            
+            color: white;
+            background: linear-gradient(to bottom, 
+                rgba(0,0,64,0.7) 0%, 
+                rgba(0,0,64,0.5) 50%, 
+                rgba(0,0,64,0.7) 100%);
+            padding: 30px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);       
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1 0 auto; /* позволяет контейнеру растягиваться */
+            min-height: 0; 
+
+        }
+
+        #tag-cloud {
+            width: 68vmin;
+            height: 68vmin;
+            max-width: 600px;
+            max-height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;           
+        }
+
+        .tagcloud--item {
+            color: #1a73e8;
+            text-decoration: none;
+            white-space: nowrap;
+            padding: 6px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-block;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        .tagcloud--item:hover {
+            background-color: #e8f0fe;
+            text-decoration: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px 0;
+            color: #5f6368;
+            font-size: 14px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>DEMO</h11>
+    </header>
+    
+    <div class="content">
+        <div id="tag-cloud"></div>
+    </div>
+    
+    <footer>
+        &copy; 2025 Terre & Co.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/TagCloud@2.2.0/dist/TagCloud.min.js"></script>
+    <script>
+        // Загрузка данных тегов
+        const tags = JSON.parse('{{ tags | tojson | safe }}');
+        
+        // Функция для определения цвета по количеству кликов
+        function getColorByClicks(clicks) {
+            const maxClicks = Math.max(...tags.map(t => t.clicks));
+            const ratio = clicks / maxClicks;
+            
+            // От синего (мало кликов) к фиолетовому (много кликов)
+            const r = Math.floor(50 + ratio * 150);
+            const g = Math.floor(50 + ratio * 50);
+            const b = Math.floor(200 - ratio * 100);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        // Подготовка текстов для облака
+        const texts = tags.map(tag => tag.name);
+        
+// Создание облака тегов
+        const cloud = TagCloud('#tag-cloud', texts, {
+            radius: Math.min(window.innerWidth, window.innerHeight) * 0.2,
+            maxSpeed: 'normal',
+            initSpeed: 'normal',
+            direction: 135,
+            keep: true,
+            useHTML: false,  // Отключаем HTML-обработку
+            itemClass: 'tagcloud--item'
+        });
+        
+        // Установка стилей для элементов
+        setTimeout(() => {
+            document.querySelectorAll('.tagcloud--item').forEach((item, index) => {
+                const tag = tags[index];
+                item.style.color = getColorByClicks(tag.clicks);
+                item.style.fontSize = `${14 + tag.clicks * 0.5}px`;
+                
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = tag.url; // Используем URL из JSON
+                });
+            });
+        }, 100);
+    </script>
+</body>
+</html>
