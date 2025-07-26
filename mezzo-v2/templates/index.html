@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mezzo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='10' fill='orange'/><text x='50' y='70' font-family='Arial' font-size='60' text-anchor='middle' fill='white'>🦏</text></svg>">  
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, white, #a5a5a5);
+            overflow: hidden; /* Убираем полосу прокрутки */
+        }
+
+        header {
+            text-align: center;
+            padding: 5px 0; /* Уменьшаем отступы сверху и снизу */
+        }
+
+        h1 {
+            color: #333;
+            background: linear-gradient(145deg, 
+                #e0e0e0 0%, 
+                #ffffff 20%, 
+                #e0e0e0 40%, 
+                #a0a0a0 60%, 
+                #e0e0e0 80%, 
+                #ffffff 100%);
+            padding: 12px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.2),
+                inset 0 1px 2px rgba(255,255,255,0.8),
+                inset 0 -1px 2px rgba(0,0,0,0.1);
+            font-size: 28px;
+            font-weight: 600;
+            margin: 5px auto;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0; /* Убираем фиксированную высоту */
+            padding: 5px 0; /* Минимальные отступы */
+        }
+
+        #tag-cloud {
+            width: 80vmin;
+            height: 80vmin;
+            max-width: 700px;
+            max-height: 700px;
+            position: relative;
+        }
+
+        .tagcloud--item {
+            /* Стиль по умолчанию (просто текст) */
+            color: inherit;             /* Цвет как у родителя */
+            text-decoration: none;      /* Без подчеркивания */
+            padding: 2px 5px;           /* Минимальные отступы */
+            border-radius: 4px;         /* Скругление (на всякий случай) */
+            transition: all 0.3s ease;  /* Плавные изменения */
+            background: transparent;    /* Прозрачный фон */
+            box-shadow: none;           /* Без теней */
+            border: none;               /* Без рамок */
+            cursor: pointer;            /* Курсор-указатель */
+            white-space: nowrap;        /* Текст в одну строку */
+        }
+
+        .tagcloud--item:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0; /* Уменьшаем отступы футера */
+            color: #5f6368;
+            font-size: 14px;
+            margin-top: auto;
+        }
+
+        .click-count {
+            display: none;  
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Mezzo</h1>
+    </header>
+    
+    <div class="content">
+        <div id="tag-cloud"></div>
+    </div>
+    
+    <footer>
+        &copy; 2025 Terre & Co.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/TagCloud@2.2.0/dist/TagCloud.min.js"></script>
+    <script>
+        // Данные тегов из Flask
+        // Добавьте эти константы в начале <script> блока
+        const MIN_FONT_SIZE = 16;  // Минимальный размер шрифта (пиксели)
+        const MAX_FONT_SIZE = 36;  // Максимальный размер шрифта (пиксели)        
+        const tags = JSON.parse('{{ tags | tojson | safe }}');
+                
+        // Функция для определения цвета по количеству кликов
+        function getColorByClicks(clicks) {
+           const clicksArray = tags.map(t => t.clicks);
+    const minClicks = Math.min(...clicksArray);
+    const maxClicks = Math.max(...clicksArray);
+
+    // Если все клики равны или массив пуст
+    if (minClicks === maxClicks) return 'rgb(150, 150, 150)'; // нейтральный серый
+
+    // Нормируем значение кликов от 0 до 1
+    const ratio = (clicks - minClicks) / (maxClicks - minClicks);
+
+    // Инвертируем ratio, чтобы больше кликов = темнее цвет
+    const lightness = 50 * (1 - ratio); // 90% (светло-серый) → 0% (черный)
+
+    return `hsl(0, 0%, ${lightness}%)`;   
+        }       
+ 
+        // Создаем облако тегов
+        const cloud = TagCloud('#tag-cloud', tags.map(tag => tag.name), {
+            radius: Math.min(window.innerWidth, window.innerHeight) * 0.35,
+            maxSpeed: 'normal',
+            initSpeed: 'normal',
+            direction: 135,
+            keep: true,
+            useHTML: true,
+            itemClass: 'tagcloud--item'
+        });
+        
+        // Настройка элементов после создания облака
+ 
+        setTimeout(() => {
+    const elements = document.querySelectorAll('.tagcloud--item');
+    const clicksArray = tags.map(t => t.clicks);
+    const minClicks = Math.min(...clicksArray);
+    const maxClicks = Math.max(...clicksArray);
+    
+    elements.forEach((element, index) => {
+        const tag = tags[index];
+        
+        // Устанавливаем цвет через цветовой круг
+        element.style.color = getColorByClicks(tag.clicks);
+        
+        // Нормированный размер шрифта (как в предыдущем решении)
+        const fontSize = minClicks === maxClicks 
+            ? (MIN_FONT_SIZE + MAX_FONT_SIZE) / 2
+            : MIN_FONT_SIZE + (tag.clicks - minClicks) / (maxClicks - minClicks) * 
+              (MAX_FONT_SIZE - MIN_FONT_SIZE);
+        element.style.fontSize = `${fontSize}px`;
+        
+        // Обработчик кликов (без изменений)
+        element.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch(`/click/${tag.name}`);
+                if (response.ok) {
+                    tag.clicks++;
+                    // Обновляем цвет после клика
+                    element.style.color = getColorByClicks(tag.clicks);
+                    // Обновляем размер шрифта
+                    const newFontSize = minClicks === maxClicks
+                        ? (MIN_FONT_SIZE + MAX_FONT_SIZE) / 2
+                        : MIN_FONT_SIZE + (tag.clicks - minClicks) / (maxClicks - minClicks) * 
+                          (MAX_FONT_SIZE - MIN_FONT_SIZE);
+                    element.style.fontSize = `${newFontSize}px`;
+                    window.open(tag.url, '_blank');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        });
+    });
+}, 100);
+
+    </script>
+</body>
+</html>
